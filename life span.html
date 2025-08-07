@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>⏳ LifeClock – Visualize Your Life in Weeks</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f4f8;
+    color: #333;
+    padding: 20px;
+    text-align: center;
+  }
+  h1 {
+    margin-bottom: 10px;
+  }
+  form {
+    margin-bottom: 20px;
+  }
+  label {
+    margin: 0 10px 0 0;
+  }
+  input[type="date"], input[type="number"] {
+    padding: 5px;
+    font-size: 1rem;
+    margin-right: 10px;
+  }
+  button {
+    padding: 6px 12px;
+    font-size: 1rem;
+    cursor: pointer;
+    background-color: #0078d7;
+    color: white;
+    border: none;
+    border-radius: 4px;
+  }
+  #lifegrid {
+    margin: 20px auto;
+    max-width: 800px;
+    display: grid;
+    grid-template-columns: repeat(52, 12px);
+    grid-gap: 2px;
+    justify-content: center;
+  }
+  .week {
+    width: 12px;
+    height: 12px;
+    background-color: #ccc;
+    border-radius: 2px;
+    position: relative;
+    cursor: default;
+  }
+  .week.past {
+    background-color: #0078d7;
+  }
+  .week:hover::after {
+    content: attr(data-info);
+    position: absolute;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #222;
+    color: #fff;
+    padding: 4px 6px;
+    font-size: 10px;
+    white-space: nowrap;
+    border-radius: 3px;
+    pointer-events: none;
+    opacity: 0.9;
+  }
+  footer {
+    margin-top: 30px;
+    font-size: 0.9rem;
+    color: #666;
+  }
+  @media (max-width: 600px) {
+    #lifegrid {
+      grid-template-columns: repeat(26, 12px);
+    }
+  }
+</style>
+</head>
+<body>
+
+<h1>⏳ LifeClock – Visualize Your Life in Weeks</h1>
+<p>Enter your birthdate and expected lifespan to see your life in weeks.</p>
+
+<form id="lifeForm">
+  <label for="birthdate">Birthdate:</label>
+  <input type="date" id="birthdate" required />
+  <label for="lifespan">Expected Lifespan (years):</label>
+  <input type="number" id="lifespan" min="30" max="120" value="80" required />
+  <button type="submit">Show Life</button>
+</form>
+
+<div id="lifegrid" aria-label="Life weeks grid" role="grid"></div>
+
+<footer>Inspired by “Your Life in Weeks” by Tim Urban</footer>
+
+<script>
+  const form = document.getElementById('lifeForm');
+  const lifegrid = document.getElementById('lifegrid');
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const birthdateInput = document.getElementById('birthdate').value;
+    const lifespanInput = parseInt(document.getElementById('lifespan').value, 10);
+
+    if (!birthdateInput) return alert('Please enter your birthdate.');
+
+    const birthdate = new Date(birthdateInput);
+    if (isNaN(birthdate)) return alert('Invalid birthdate.');
+
+    if (lifespanInput < 30 || lifespanInput > 120) return alert('Please enter a lifespan between 30 and 120.');
+
+    drawLifeGrid(birthdate, lifespanInput);
+  });
+
+  function drawLifeGrid(birthdate, lifespanYears) {
+    lifegrid.innerHTML = '';
+
+    const weeksPerYear = 52;
+    const totalWeeks = lifespanYears * weeksPerYear;
+
+    // Calculate current week number since birth
+    const now = new Date();
+    const diffMs = now - birthdate;
+    const weeksLived = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 7));
+
+    // Responsive columns for smaller screens
+    if(window.innerWidth < 600) {
+      lifegrid.style.gridTemplateColumns = `repeat(26, 12px)`;
+    } else {
+      lifegrid.style.gridTemplateColumns = `repeat(52, 12px)`;
+    }
+
+    for (let i = 0; i < totalWeeks; i++) {
+      const div = document.createElement('div');
+      div.classList.add('week');
+      if (i < weeksLived) div.classList.add('past');
+      const yearNum = Math.floor(i / weeksPerYear) + 1;
+      const weekNum = (i % weeksPerYear) + 1;
+      div.setAttribute('data-info', `Year ${yearNum}, Week ${weekNum} - ${i < weeksLived ? 'Past' : 'Future'}`);
+      div.setAttribute('role', 'gridcell');
+      lifegrid.appendChild(div);
+    }
+  }
+</script>
+
+</body>
+</html>
